@@ -30,8 +30,15 @@ DEBUG = True
 
 # ALLOWED_HOSTS = ['localhost', 'https://machadojorge-8000.theianext-1-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai/']
 # CSRF_TRUSTED_ORIGINS = ['https://machadojorge-8000.theianext-1-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai/']
+# CSRF_TRUSTED_ORIGINS = [
+#     'https://machadojorge-8000.theianext-1-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai'
+# ]
 CSRF_TRUSTED_ORIGINS = [
-    'https://machadojorge-8000.theianext-1-labs-prod-misc-tools-us-east-0.proxy.cognitiveclass.ai'
+    'https://machadojorge-8000.theiadockernext-1-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai'
+]
+
+CORS_ALLOWED_ORIGINS = [
+    'https://machadojorge-8000.theiadockernext-1-labs-prod-theiak8s-4-tor01.proxy.cognitiveclass.ai'
 ]
 
 # expira cookies de sessão quando o browser fecha
@@ -48,6 +55,8 @@ ALLOWED_HOSTS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [],
 }
+
+
 
 # Application definition
 
