@@ -15,8 +15,7 @@ import logging
 import json
 from django.views.decorators.csrf import csrf_exempt
 from .populate import initiate
-from .restapis import get_request, post_review, analyze_review_sentiments
-
+from .restapis import get_request, analyze_review_sentiments, post_review
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
 
@@ -110,6 +109,7 @@ def get_cars(request):
 
 
 #Update the `get_dealerships` render list of dealerships all by default, particular state if state is passed
+#Update the `get_dealerships` render list of dealerships all by default, particular state if state is passed
 def get_dealerships(request, state="All"):
     if(state == "All"):
         endpoint = "/fetchDealers"
@@ -118,26 +118,85 @@ def get_dealerships(request, state="All"):
     dealerships = get_request(endpoint)
     return JsonResponse({"status":200,"dealers":dealerships})
 
+# def get_dealer_details(request, dealer_id):
+#     if(dealer_id):
+#         endpoint = "/fetchDealer/"+str(dealer_id)
+#         dealership = get_request(endpoint)
+#         return JsonResponse({"status":200,"dealer":dealership})
+#     else:
+#         return JsonResponse({"status":400,"message":"Bad Request"})
+
 def get_dealer_details(request, dealer_id):
-    if(dealer_id):
-        endpoint = "/fetchDealer/"+str(dealer_id)
-        dealership = get_request(endpoint)
-        return JsonResponse({"status":200,"dealer":dealership})
+    if dealer_id:
+        endpoint = "/fetchReviews/dealer/" + str(dealer_id)
+        print(f"endpoint: {endpoint}")
+        dealer_data = get_request(endpoint)  # chama o backend
+        print(type(dealer_data))
+        print(dealer_data)
+
+         # Se for lista, pega o primeiro elemento (normalmente há só 1 dealer)
+        dealer_info = dealer_data[0] if isinstance(dealer_data, list) and len(dealer_data) > 0 else {}
+
+        # Retorna dealer_info para o frontend
+        return JsonResponse({"status": 200, "dealer": [dealer_info]})
     else:
-        return JsonResponse({"status":400,"message":"Bad Request"})
+        return JsonResponse({"status": 400, "message": "Bad Request"})
+
+
+    #     reviews = response.get('reviews', [])  # pega a lista de reviews, ou [] se não existir
+
+    #     for review_detail in reviews:
+    #         sentiment_response = analyze_review_sentiments(review_detail.get('review', ''))
+    #         review_detail['sentiment'] = sentiment_response.get('sentiment', 'neutral')
+
+    #     return JsonResponse({"status": 200, "reviews": reviews})
+    # else:
+    #     return JsonResponse({"status": 400, "message": "Bad Request"})
+
+# def get_dealer_details(request, dealer_id):
+#     print(f"Dealer_id: {dealer_id}")
+#     if dealer_id:
+#         endpoint = "/fetchDealer/" + str(dealer_id)  # endpoint correto para detalhes do dealer
+#         response = get_request(endpoint)  # chama o backend
+
+#         # response já deve ser um dicionário com os dados do dealer
+#         return JsonResponse({"status": 200, "dealer": response})
+#     else:
+#         return JsonResponse({"status": 400, "message": "Bad Request"})
+
+
+# def get_dealer_reviews(request, dealer_id):
+#     # if dealer id has been provided
+#     if(dealer_id):
+#         endpoint = "/fetchReviews/dealer/"+str(dealer_id)
+#         reviews = get_request(endpoint)
+#         for review_detail in reviews:
+#             response = analyze_review_sentiments(review_detail['review'])
+#             print(response)
+#             review_detail['sentiment'] = response['sentiment']
+#         return JsonResponse({"status":200,"reviews":reviews})
+#     else:
+#         return JsonResponse({"status":400,"message":"Bad Request"})
 
 def get_dealer_reviews(request, dealer_id):
-    # if dealer id has been provided
     if(dealer_id):
         endpoint = "/fetchReviews/dealer/"+str(dealer_id)
         reviews = get_request(endpoint)
         for review_detail in reviews:
-            response = analyze_review_sentiments(review_detail['review'])
-            print(response)
-            review_detail['sentiment'] = response['sentiment']
-        return JsonResponse({"status":200,"reviews":reviews})
+            sentiment_response = analyze_review_sentiments(review_detail.get('review', ''))
+            review_detail['sentiment'] = sentiment_response.get('sentiment', 'neutral')
+
+        return JsonResponse({"status": 200, "reviews": reviews})
     else:
-        return JsonResponse({"status":400,"message":"Bad Request"})
+        return JsonResponse({"status": 400, "message": "Bad Request"})
+    #     for review_detail in reviews:
+    #         response = analyze_review_sentiments(review_detail['review'])
+    #         print(response)
+    #         review_detail['sentiment'] = response['sentiment']
+    #     return JsonResponse({"status":200,"reviews":reviews})
+    # else:
+    #     return JsonResponse({"status":400,"message":"Bad Request"})
+
 
 def post_review(data_dict):
     request_url = backend_url+"/insert_review"
@@ -149,6 +208,7 @@ def post_review(data_dict):
         print("Network exception occurred")
 
 def add_review(request):
+    print(request)
     if(request.user.is_anonymous == False):
         data = json.loads(request.body)
         try:
@@ -158,4 +218,3 @@ def add_review(request):
             return JsonResponse({"status":401,"message":"Error in posting review"})
     else:
         return JsonResponse({"status":403,"message":"Unauthorized"})
-    
